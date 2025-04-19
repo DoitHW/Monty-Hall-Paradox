@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Paradoja de Monty Hall – simulación interactiva</title>
+
+  <!-- Fuentes e iconos -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+  <!-- Seedrandom (opcional) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/seedrandom/3.0.5/seedrandom.min.js"></script>
+
+  <style>
+    :root{--primary:#4361ee;--accent:#ff9f1c;--stay:#22c55e;--switch:#ef4444;--bg:#f8fafc;--surface:#fff;--radius:16px;}
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
+    body{background:var(--bg);color:#1f2937;display:flex;justify-content:center;min-height:100vh;}
+    .container{max-width:960px;width:100%;padding:1rem;}
+    header{text-align:center;margin-bottom:1.5rem;}
+    h1{font-size:2rem;background:linear-gradient(90deg,var(--primary),var(--accent));-webkit-background-clip:text;color:transparent;}
+    .card{background:var(--surface);border-radius:var(--radius);box-shadow:0 4px 12px rgba(0,0,0,.08);padding:1rem;margin-bottom:1.25rem;}
+    .card-title{display:flex;align-items:center;gap:.5rem;color:var(--primary);font-weight:600;margin-bottom:.75rem;}
+    button{cursor:pointer;padding:.5rem 1rem;border:none;border-radius:.5rem;font-weight:600;display:flex;align-items:center;gap:.4rem;transition:background .2s,transform .2s;}
+    .btn-primary{background:var(--primary);color:#fff;} .btn-primary:hover:not(:disabled){background:#3a56d4;transform:translateY(-2px);}
+    .btn-secondary{background:#e5e7eb;color:#374151;} .btn-secondary:hover:not(:disabled){background:#d1d5db;transform:translateY(-2px);} button:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+    #montyCanvas{border:2px solid #e5e7eb;border-radius:var(--radius);background:#fff;display:block;margin:0 auto;cursor:pointer;}
+    .canvas-container{width:100%;overflow-x:auto;overflow-y:hidden;}
+    .controls{display:flex;flex-wrap:wrap;gap:1rem;margin-top:.5rem;}
+    .controls label{display:flex;flex-direction:column;font-size:.85rem;}
+    .controls input,.controls select{padding:.3rem;border:1px solid #d1d5db;border-radius:4px;}
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-top:1rem;}
+    .stat{text-align:center;}
+    .stat-value{font-size:1.6rem;font-weight:700;}
+    .progress-bar{width:100%;height:6px;background:#e2e8f0;border-radius:4px;overflow:hidden;margin-top:.4rem;}
+    .progress-inner{height:100%;transition:width .3s;}
+    .stay-bar{background:var(--stay);} .switch-bar{background:var(--accent);}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Paradoja de Monty Hall</h1>
+      <p>Visualiza paso a paso por qué cambiar suele ser la mejor estrategia.</p>
+    </header>
+
+    <!-- Escenario -->
+    <div class="card">
+      <h2 class="card-title"><i class="fas fa-door-open"></i> Escenario</h2>
+      <div class="canvas-container">
+        <canvas id="montyCanvas" width="820" height="360"></canvas>
+      </div>
+    </div>
+
+    <!-- Controles -->
+    <div class="card">
+      <h2 class="card-title"><i class="fas fa-sliders"></i> Controles</h2>
+      <div class="controls">
+        <button id="btnStart"  class="btn-primary"><i class="fas fa-play"></i> Iniciar</button>
+        <button id="btnPause"  class="btn-secondary" disabled><i class="fas fa-pause"></i> Pausar</button>
+        <button id="btnResume" class="btn-secondary" disabled><i class="fas fa-play"></i> Reanudar</button>
+        <button id="btnReset"  class="btn-secondary" disabled><i class="fas fa-redo"></i> Reiniciar</button>
+
+        <label>Velocidad ×<span id="speedLabel">1</span>
+          <input type="range" id="speedRange" min="0.25" max="10" step="0.25" value="1">
+        </label>
+        <label>Puertas<select id="selDoors"><option>3</option><option>4</option><option>5</option><option>6</option></select></label>
+        <label>Tiradas<input type="number" id="inpTrials" value="500" min="1"></label>
+        <label>Estrategia<select id="selStrategy">
+            <option value="mantener">Mantener</option>
+            <option value="cambiar">Cambiar</option>
+            <option value="aleatoria">Aleatoria</option>
+            <option value="manual">Manual</option>
+          </select></label>
+        <label>Gráfico<select id="selChart"><option value="line">Línea</option><option value="bar">Barras</option><option value="doughnut">Anillo</option><option value="stacked">Área apilada</option></select></label>
+      </div>
+    </div>
+
+    <!-- Resultados -->
+    <div class="card">
+      <h2 class="card-title"><i class="fas fa-chart-bar"></i> Resultados</h2>
+      <div class="stats-grid">
+        <div class="stat"><div>Tirada</div><div id="currentTrial" class="stat-value">0</div><div>de <span id="maxTrials">500</span></div></div>
+        <div class="stat"><div>Victorias mantener</div><div id="stayWins" class="stat-value">0</div><div id="stayPct">(0%)</div><div class="progress-bar"><div id="stayBar" class="progress-inner stay-bar" style="width:0%"></div></div></div>
+        <div class="stat"><div>Victorias cambiar</div><div id="switchWins" class="stat-value">0</div><div id="switchPct">(0%)</div><div class="progress-bar"><div id="switchBar" class="progress-inner switch-bar" style="width:0%"></div></div></div>
+      </div>
+      <canvas id="statsChart" height="120"></canvas>
+    </div>
+  </div>
+
+  <script>
+  document.addEventListener('DOMContentLoaded',()=>{
+
+    /* ---------- Polyfill roundRect ---------- */
+    if(!CanvasRenderingContext2D.prototype.roundRect){
+      CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r=8){
+        if(typeof r==='number')r={tl:r,tr:r,br:r,bl:r};
+        this.beginPath();
+        this.moveTo(x+r.tl,y);
+        this.lineTo(x+w-r.tr,y);this.quadraticCurveTo(x+w,y,x+w,y+r.tr);
+        this.lineTo(x+w,y+h-r.br);this.quadraticCurveTo(x+w,y+h,x+w-r.br,y+h);
+        this.lineTo(x+r.bl,y+h);this.quadraticCurveTo(x,y+h,x,y+h-r.bl);
+        this.lineTo(x,y+r.tl);this.quadraticCurveTo(x,y,x+r.tl,y);
+        this.closePath();
+      };
+    }
+
+    /* ---------- Config & estado ---------- */
+    const cfg={doors:3,total:500,speed:1,strategy:'mantener',doorW:140,doorH:210,gap:40,delay:600};
+    const st={trial:0,stayWin:0,switchWin:0,running:false,paused:false,manualStage:'idle',initialPick:null,hostOpen:null,doors:null,remainingClosed:null};
+
+    /* ---------- DOM refs ---------- */
+    const $=id=>document.getElementById(id);
+    const canvas=$('montyCanvas');const ctx=canvas.getContext('2d');
+    const btnStart=$('btnStart'),btnPause=$('btnPause'),btnResume=$('btnResume'),btnReset=$('btnReset');
+    const canvasContainer=canvas.parentElement;
+
+    /* ---------- Responsive Canvas ---------- */
+    function adjustCanvasWidth() {
+      // Calcular el ancho necesario para mostrar todas las puertas
+      const neededWidth = cfg.doors * cfg.doorW + (cfg.doors - 1) * cfg.gap + 80; // añadimos margen
+      const containerWidth = canvasContainer.clientWidth;
+      
+      // Establecer el ancho del canvas según sea necesario
+      if (neededWidth > containerWidth) {
+        canvas.width = neededWidth;
+        canvas.style.width = neededWidth + 'px';
+      } else {
+        canvas.width = containerWidth;
+        canvas.style.width = '100%';
+      }
+      
+      // Actualizar la escena si hay puertas presentes
+      if (st.doors) {
+        drawScene(st.doors);
+      } else {
+        drawScene([...Array(cfg.doors).keys()].map(() => ({open: false, hasPrize: false})));
+      }
+    }
+
+    // Ajustar el canvas cuando cambie el tamaño de la ventana
+    window.addEventListener('resize', adjustCanvasWidth);
+
+    /* ---------- Chart ---------- */
+    let chart;const chartCtx=$('statsChart').getContext('2d');
+
+    function buildChart(type){
+      if(chart)chart.destroy();
+      const base={labels:[],datasets:[
+        {label:'Mantener',data:[],borderColor:'#4361ee',backgroundColor:'rgba(67,97,238,.2)',fill:(type==='stacked'),tension:.25},
+        {label:'Cambiar',data:[],borderColor:'#ff9f1c',backgroundColor:'rgba(255,159,28,.2)',fill:(type==='stacked'),tension:.25}
+      ]};
+      if(type==='line'||type==='stacked'){
+        chart=new Chart(chartCtx,{type:'line',data:base,options:{animation:false,scales:{y:{beginAtZero:true,max:100,ticks:{callback:v=>v+'%'}}}}});
+      }else if(type==='bar'){
+        chart=new Chart(chartCtx,{type:'bar',data:{labels:['Mantener','Cambiar'],datasets:[{data:[0,0],backgroundColor:['#4361ee','#ff9f1c']}]},options:{animation:false,scales:{y:{beginAtZero:true,max:100,ticks:{callback:v=>v+'%'}}}}});
+      }else{
+        chart=new Chart(chartCtx,{type:'doughnut',data:{labels:['Mantener','Cambiar'],datasets:[{data:[0,0],backgroundColor:['#4361ee','#ff9f1c']}]},options:{animation:false}});
+      }
+    }
+    buildChart('line');
+
+    /* ---------- Dibujo ---------- */
+    function drawDoor(x,y,i,open,prize,highlight,colorBorder='#e58f00'){
+      ctx.save();
+      ctx.shadowColor='rgba(0,0,0,.08)';ctx.shadowBlur=6;ctx.shadowOffsetX=3;ctx.shadowOffsetY=3;
+      if(!open){
+        ctx.beginPath();ctx.roundRect(x,y,cfg.doorW,cfg.doorH,8);
+        const g=ctx.createLinearGradient(x,y,x+cfg.doorW,y);
+        g.addColorStop(0,highlight?colorBorder:'#9a5d2d');g.addColorStop(1,highlight?colorBorder:'#7d4b27');
+        ctx.fillStyle=g;ctx.fill();
+        ctx.lineWidth=highlight?4:2;ctx.strokeStyle=highlight?colorBorder:'#503117';ctx.stroke();
+        ctx.shadowBlur=0;ctx.fillStyle='#fff';ctx.font='bold 30px Poppins';ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText(i+1,x+cfg.doorW/2,y+cfg.doorH/2);
+      }else{
+        ctx.beginPath();ctx.roundRect(x,y,cfg.doorW,cfg.doorH,8);
+        ctx.lineWidth=4;ctx.strokeStyle='#8b5a2b';ctx.stroke();
+        ctx.fillStyle=prize?'rgba(255,222,89,.5)':'rgba(232,232,232,.75)';ctx.fill();
+        ctx.fillStyle='#000';ctx.font='bold 22px Poppins';ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText(prize?'PREMIO':'CABRA',x+cfg.doorW/2,y+cfg.doorH/2);
+      }
+      ctx.restore();
+    }
+
+    function drawScene(doors,highlight=-1,highlightColor){
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      const bg=ctx.createLinearGradient(0,0,0,canvas.height);
+      bg.addColorStop(0,'#f8fafc');bg.addColorStop(1,'#e2e8f0');
+      ctx.fillStyle=bg;ctx.fillRect(0,0,canvas.width,canvas.height);
+      const startX=(canvas.width-(cfg.doors*cfg.doorW+(cfg.doors-1)*cfg.gap))/2;
+      doors.forEach((d,i)=>drawDoor(startX+i*(cfg.doorW+cfg.gap),60,i,d.open,d.hasPrize,i===highlight,highlightColor));
+    }
+
+    function clickToDoorIdx(evt){
+      const rect=canvas.getBoundingClientRect();
+      const x=evt.clientX-rect.left;
+      const startX=(canvas.width-(cfg.doors*cfg.doorW+(cfg.doors-1)*cfg.gap))/2;
+      for(let i=0;i<cfg.doors;i++){
+        const dx=startX+i*(cfg.doorW+cfg.gap);
+        if(x>=dx && x<=dx+cfg.doorW) return i;
+      }
+      return -1;
+    }
+
+    /* ---------- UI Stats ---------- */
+    function updateStats(){
+      $('currentTrial').textContent=st.trial;$('maxTrials').textContent=cfg.total;
+      $('stayWins').textContent=st.stayWin;$('switchWins').textContent=st.switchWin;
+      const pS=st.trial?(st.stayWin/st.trial*100).toFixed(1):0;
+      const pC=st.trial?(st.switchWin/st.trial*100).toFixed(1):0;
+      $('stayPct').textContent=`(${pS}%)`;$('switchPct').textContent=`(${pC}%)`;
+      $('stayBar').style.width=pS+'%';$('switchBar').style.width=pC+'%';
+      const mode=$('selChart').value;
+      if(mode==='line'||mode==='stacked'){chart.data.labels.push(st.trial);chart.data.datasets[0].data.push(pS);chart.data.datasets[1].data.push(pC);}else{chart.data.datasets[0].data=[pS,pC];}
+      chart.update('none');
+    }
+
+    /* ---------- Lógica automática ---------- */
+    const wait=ms=>new Promise(r=>setTimeout(r,ms));
+    
+    async function autoRound(){
+      // Asegurar exactamente un premio entre todas las puertas
+      const prize = Math.floor(Math.random() * cfg.doors);
+      const pick = Math.floor(Math.random() * cfg.doors);
+      
+      // Crear puertas
+      const doors = [...Array(cfg.doors).keys()].map(i => ({
+        open: false,
+        hasPrize: i === prize
+      }));
+
+      // Mostrar selección inicial
+      drawScene(doors, pick, '#ffcf1c'); 
+      await wait(cfg.delay/cfg.speed);
+      
+      // Ahora el presentador abre todas las puertas vacías excepto una
+      // No abre: la puerta del concursante y una puerta adicional (que puede o no tener el premio)
+      
+      // Primero, identificar todas las puertas que no son la selección inicial y no tienen premio
+      const emptyDoorsToOpen = [...Array(cfg.doors).keys()]
+        .filter(i => i !== pick && !doors[i].hasPrize);
+      
+      // Si la puerta seleccionada tiene el premio, dejamos una puerta vacía sin abrir
+      let remainingClosedDoor = -1;
+      if (pick === prize) {
+        // Seleccionamos una puerta vacía para dejar cerrada
+        if (emptyDoorsToOpen.length > 0) {
+          const randomIdx = Math.floor(Math.random() * emptyDoorsToOpen.length);
+          remainingClosedDoor = emptyDoorsToOpen[randomIdx];
+          // Eliminamos esta puerta de las que se abrirán
+          emptyDoorsToOpen.splice(randomIdx, 1);
+        }
+      } else {
+        // Si la puerta seleccionada no tiene el premio, dejamos cerrada la que tiene el premio
+        remainingClosedDoor = prize;
+      }
+      
+      // Animación de abrir todas las puertas vacías
+      for (const doorIdx of emptyDoorsToOpen) {
+        doors[doorIdx].open = true;
+        drawScene(doors, pick, '#ffcf1c');
+        await wait(Math.min(cfg.delay/cfg.speed, 300)); // Para no tardar demasiado con muchas puertas
+      }
+      
+      // Ahora solo quedan dos puertas cerradas: la selección inicial y la otra que dejamos
+      
+      // El concursante decide cambiar o mantener según la estrategia
+      const willSwitch = (cfg.strategy === 'cambiar') || 
+                        (cfg.strategy === 'aleatoria' && Math.random() < 0.5);
+      
+      const finalPick = willSwitch ? remainingClosedDoor : pick;
+      
+      // Resaltar puerta final
+      drawScene(doors, finalPick, '#ff9f1c'); 
+      await wait(cfg.delay/cfg.speed);
+
+      // Abrir puerta final
+      doors[finalPick].open = true; 
+      drawScene(doors, finalPick, '#ff9f1c'); 
+      await wait(cfg.delay/cfg.speed);
+      
+      // Abrir todas las puertas restantes
+      doors.forEach((d, i) => {
+        if (!d.open) d.open = true;
+      }); 
+      drawScene(doors, finalPick);
+
+      // ACTUALIZACIÓN DE ESTADÍSTICAS:
+      // Siempre contamos si habría ganado manteniendo o cambiando,
+      // independientemente de la estrategia elegida
+      if (prize === pick) st.stayWin++; // Si el premio estaba en la elección inicial
+      else st.switchWin++; // Si el premio estaba en otra puerta
+      
+      st.trial++; 
+      updateStats();
+    }
+
+    async function loop(){
+      while(st.running && st.trial<cfg.total){
+        if(st.paused){await wait(100);continue;}
+        await autoRound();
+      }
+      st.running=false;btnStart.disabled=false;btnPause.disabled=true;btnResume.disabled=true;btnReset.disabled=false;
+    }
+
+    /* ---------- Lógica modo Manual ---------- */
+    function prepareManual(){
+      st.manualStage = 'waitingInitial';
+      st.initialPick = null;
+      st.hostOpen = null;
+      st.remainingClosed = null;
+      
+      // Asegurar que solo hay una puerta con premio
+      const prizePosition = Math.floor(Math.random() * cfg.doors);
+      st.doors = [...Array(cfg.doors).keys()].map(i => ({
+        open: false,
+        hasPrize: i === prizePosition
+      }));
+      
+      drawScene(st.doors, -1);
+    }
+
+    function manualClick(idx){
+      // Prevenir clics si no estamos en un estado válido
+      if (st.manualStage === 'idle' || !st.running) return;
+      
+      if(st.manualStage === 'waitingInitial'){
+        st.initialPick = idx;
+        drawScene(st.doors, idx, '#ffcf1c');
+        
+        // El presentador abre todas las puertas vacías excepto una
+        const emptyDoors = [...Array(cfg.doors).keys()]
+          .filter(i => i !== st.initialPick && !st.doors[i].hasPrize);
+        
+        const prizeIdx = st.doors.findIndex(d => d.hasPrize);
+        
+        // Determinar qué puerta dejamos cerrada aparte de la inicial
+        if (st.initialPick === prizeIdx) {
+          // Si la selección inicial tiene el premio, dejamos una puerta vacía cerrada
+          if (emptyDoors.length > 0) {
+            const randomIdx = Math.floor(Math.random() * emptyDoors.length);
+            st.remainingClosed = emptyDoors[randomIdx];
+            // Eliminar esta puerta de las que se abrirán
+            emptyDoors.splice(randomIdx, 1);
+          }
+        } else {
+          // Si la selección inicial no tiene el premio, dejamos cerrada la que tiene el premio
+          st.remainingClosed = prizeIdx;
+        }
+        
+        // Abrir todas las demás puertas vacías
+        let doorOpenCount = 0;
+        const openNextDoor = () => {
+          if (doorOpenCount < emptyDoors.length) {
+            st.doors[emptyDoors[doorOpenCount]].open = true;
+            drawScene(st.doors, idx, '#ffcf1c');
+            doorOpenCount++;
+            setTimeout(openNextDoor, Math.min(cfg.delay/cfg.speed, 300));
+          } else {
+            // Una vez abiertas todas las puertas necesarias, cambiamos al siguiente estado
+            st.manualStage = 'waitingFinal';
+          }
+        };
+        
+        // Iniciar animación de apertura secuencial
+        setTimeout(openNextDoor, 200);
+      } 
+      else if(st.manualStage === 'waitingFinal') {
+        // Solo permitir seleccionar la puerta inicial o la otra puerta que quedó cerrada
+        if (idx !== st.initialPick && idx !== st.remainingClosed) {
+          return; // Ignora clics en puertas inválidas o ya abiertas
+        }
+        
+        const finalPick = idx;
+        const prizeIdx = st.doors.findIndex(d => d.hasPrize);
+        
+        // Cambiar a estado idle para evitar más clics durante la animación
+        st.manualStage = 'idle';
+        
+        drawScene(st.doors, finalPick, '#ff9f1c');
+        
+        setTimeout(() => {
+          // Mostrar resultado de la puerta final seleccionada
+          st.doors[finalPick].open = true;
+          drawScene(st.doors, finalPick, '#ff9f1c');
+          
+          // Esperar un momento y luego mostrar todas las puertas
+          setTimeout(() => {
+            st.doors.forEach((d, i) => {
+              if (!d.open) d.open = true;
+            });
+            drawScene(st.doors, finalPick, '#ff9f1c');
+            
+            // Actualizar estadísticas según donde estaba el premio
+            if (prizeIdx === st.initialPick) st.stayWin++;
+            else st.switchWin++;
+            
+            st.trial++; 
+            updateStats();
+            
+            // Preparar siguiente ronda o finalizar
+            setTimeout(() => {
+              if (st.trial < cfg.total) {
+                prepareManual();
+              } else {
+                st.running = false;
+                btnStart.disabled = false;
+                btnReset.disabled = false;
+                canvas.style.pointerEvents = 'none';
+              }
+            }, 500);
+          }, 500);
+        }, 300);
+      }
+    }
+
+    /* ---------- Reset ---------- */
+    function resetAll(){
+      st.trial = st.stayWin = st.switchWin = 0;
+      st.running = false;
+      st.paused = false;
+      st.manualStage = 'idle'; // Asegurar que el estado manual se reinicia
+      st.remainingClosed = null;
+      
+      // Crear puertas vacías (sin asignar premios todavía)
+      st.doors = [...Array(cfg.doors).keys()].map(() => ({
+        open: false, 
+        hasPrize: false
+      }));
+      
+      buildChart($('selChart').value);
+      updateStats();
+      adjustCanvasWidth();
+      
+      // Restablecer botones
+      btnStart.disabled = false;
+      btnPause.disabled = true;
+      btnResume.disabled = true;
+      btnReset.disabled = false;
+      
+      // Desactivar interacción con canvas hasta que comience el modo manual
+      canvas.style.pointerEvents = 'none';
+    }
+
+    /* ---------- Listeners ---------- */
+    $('speedRange').oninput=e=>{cfg.speed=parseFloat(e.target.value);$('speedLabel').textContent=cfg.speed;};
+    $('selDoors').onchange=e=>{cfg.doors=parseInt(e.target.value);resetAll();};
+    $('inpTrials').onchange=e=>{cfg.total=parseInt(e.target.value);$('maxTrials').textContent=cfg.total;resetAll();};
+    $('selStrategy').onchange=e=>{cfg.strategy=e.target.value;};
+    $('selChart').onchange=e=>{buildChart(e.target.value);updateStats();};
+
+    btnStart.onclick = () => {
+      resetAll();
+      if (cfg.strategy === 'manual') {
+        st.running = true;
+        btnStart.disabled = true;
+        btnPause.disabled = true;
+        btnResume.disabled = true;
+        btnReset.disabled = false;
+        canvas.style.pointerEvents = 'auto';
+        prepareManual();
+      } else {
+        st.running = true;
+        btnStart.disabled = true;
+        btnPause.disabled = false;
+        btnResume.disabled = true;
+        btnReset.disabled = false;
+        canvas.style.pointerEvents = 'none';
+        loop();
+      }
+    };
+    btnPause.onclick=()=>{st.paused=true;btnPause.disabled=true;btnResume.disabled=false;};
+    btnResume.onclick=()=>{st.paused=false;btnPause.disabled=false;btnResume.disabled=true;};
+    btnReset.onclick=resetAll;
+
+    // Mejorar el listener del canvas para manejar mejor los estados
+    canvas.addEventListener('click', e => {
+      if (cfg.strategy !== 'manual' || !st.running) return;
+      
+      const idx = clickToDoorIdx(e);
+      if (idx !== -1) {
+        // Agregar comprobación de estado antes de procesar el clic
+        if (st.manualStage === 'waitingInitial' || st.manualStage === 'waitingFinal') {
+          manualClick(idx);
+        }
+      }
+    });
+
+    /* ---------- inicio ---------- */
+    adjustCanvasWidth(); // Ajustar el canvas al cargar
+    resetAll();
+  });
+  </script>
+</body>
+</html>
