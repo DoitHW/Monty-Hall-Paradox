@@ -1,497 +1,1738 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Paradoja de Monty Hall – simulación interactiva</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>¡EL GRAN DILEMA! - Paradoja de Monty Hall</title>
 
-  <!-- Fuentes e iconos -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+<!-- Fuentes e iconos -->
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
-  <!-- Seedrandom (opcional) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/seedrandom/3.0.5/seedrandom.min.js"></script>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+<!-- Confetti para celebraciones -->
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<!-- Seedrandom (opcional) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/seedrandom/3.0.5/seedrandom.min.js"></script>
 
-  <style>
-    :root{--primary:#4361ee;--accent:#ff9f1c;--stay:#22c55e;--switch:#ef4444;--bg:#f8fafc;--surface:#fff;--radius:16px;}
-    *{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
-    body{background:var(--bg);color:#1f2937;display:flex;justify-content:center;min-height:100vh;}
-    .container{max-width:960px;width:100%;padding:1rem;}
-    header{text-align:center;margin-bottom:1.5rem;}
-    h1{font-size:2rem;background:linear-gradient(90deg,var(--primary),var(--accent));-webkit-background-clip:text;color:transparent;}
-    .card{background:var(--surface);border-radius:var(--radius);box-shadow:0 4px 12px rgba(0,0,0,.08);padding:1rem;margin-bottom:1.25rem;}
-    .card-title{display:flex;align-items:center;gap:.5rem;color:var(--primary);font-weight:600;margin-bottom:.75rem;}
-    button{cursor:pointer;padding:.5rem 1rem;border:none;border-radius:.5rem;font-weight:600;display:flex;align-items:center;gap:.4rem;transition:background .2s,transform .2s;}
-    .btn-primary{background:var(--primary);color:#fff;} .btn-primary:hover:not(:disabled){background:#3a56d4;transform:translateY(-2px);}
-    .btn-secondary{background:#e5e7eb;color:#374151;} .btn-secondary:hover:not(:disabled){background:#d1d5db;transform:translateY(-2px);} button:disabled{opacity:.6;cursor:not-allowed;transform:none;}
-    #montyCanvas{border:2px solid #e5e7eb;border-radius:var(--radius);background:#fff;display:block;margin:0 auto;cursor:pointer;}
-    .canvas-container{width:100%;overflow-x:auto;overflow-y:hidden;}
-    .controls{display:flex;flex-wrap:wrap;gap:1rem;margin-top:.5rem;}
-    .controls label{display:flex;flex-direction:column;font-size:.85rem;}
-    .controls input,.controls select{padding:.3rem;border:1px solid #d1d5db;border-radius:4px;}
-    .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-top:1rem;}
-    .stat{text-align:center;}
-    .stat-value{font-size:1.6rem;font-weight:700;}
-    .progress-bar{width:100%;height:6px;background:#e2e8f0;border-radius:4px;overflow:hidden;margin-top:.4rem;}
-    .progress-inner{height:100%;transition:width .3s;}
-    .stay-bar{background:var(--stay);} .switch-bar{background:var(--accent);}
-  </style>
+<style>
+  :root {
+    --primary: #e91e63;
+    --primary-dark: #c2185b;
+    --primary-light: #f8bbd0;
+    --secondary: #ffeb3b;
+    --secondary-dark: #fbc02d;
+    --accent: #ff9800;
+    --stay: #4caf50;
+    --switch: #2196f3;
+    --bg: #0a0a1a;
+    --surface: #1a1a2e;
+    --surface-light: #2a2a40;
+    --text: #ffffff;
+    --text-secondary: #b0b0c0;
+    --radius: 16px;
+    --glow: 0 0 10px rgba(233, 30, 99, 0.5);
+  }
+  
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Montserrat', sans-serif;
+  }
+  
+  body {
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+    background-image: 
+      radial-gradient(circle at 10% 20%, rgba(233, 30, 99, 0.1) 0%, transparent 20%),
+      radial-gradient(circle at 90% 80%, rgba(255, 152, 0, 0.1) 0%, transparent 20%),
+      radial-gradient(circle at 50% 50%, rgba(33, 150, 243, 0.05) 0%, transparent 50%);
+  }
+  
+  .container {
+    max-width: 1200px;
+    width: 100%;
+    padding: 1.5rem;
+  }
+  
+  header {
+    text-align: center;
+    margin-bottom: 2rem;
+    position: relative;
+  }
+  
+  .logo {
+    font-size: 3rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: var(--glow);
+    margin-bottom: 0.5rem;
+    letter-spacing: -1px;
+    position: relative;
+    display: inline-block;
+  }
+  
+  .logo::after {
+    content: "GAME SHOW";
+    position: absolute;
+    bottom: -10px;
+    right: -10px;
+    font-size: 0.8rem;
+    background: var(--accent);
+    color: #000;
+    padding: 2px 8px;
+    border-radius: 4px;
+    transform: rotate(-5deg);
+    font-weight: 700;
+  }
+  
+  .subtitle {
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+    font-weight: 500;
+  }
+  
+  .card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+  }
+  
+  .card-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--primary);
+    font-weight: 700;
+    margin-bottom: 1.25rem;
+    font-size: 1.4rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  
+  .card-title i {
+    background: var(--primary);
+    color: white;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+  }
+  
+  button {
+    cursor: pointer;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 0.9rem;
+  }
+  
+  .btn-primary {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 4px 12px rgba(233, 30, 99, 0.3);
+  }
+  
+  .btn-primary:hover:not(:disabled) {
+    background: var(--primary-dark);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(233, 30, 99, 0.4);
+  }
+  
+  .btn-secondary {
+    background: var(--surface-light);
+    color: var(--text);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .btn-secondary:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-3px);
+  }
+  
+  button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+  
+  .stage {
+    position: relative;
+    padding: 1rem;
+    background: linear-gradient(to bottom, var(--surface-light), var(--surface));
+    border-radius: var(--radius);
+    margin-bottom: 1rem;
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+  }
+  
+  .stage::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100px;
+    background: radial-gradient(ellipse at center, rgba(255, 235, 59, 0.2) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  
+  #montyCanvas {
+    border-radius: var(--radius);
+    background: transparent;
+    display: block;
+    margin: 0 auto;
+    cursor: pointer;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  }
+  
+  .canvas-container {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    position: relative;
+    padding: 1rem 0;
+  }
+  
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 1rem;
+    align-items: center;
+  }
+  
+  .control-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: var(--surface-light);
+    border-radius: 12px;
+    flex: 1;
+    min-width: 280px;
+  }
+  
+  .control-group-title {
+    width: 100%;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  
+  .controls label {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    gap: 0.5rem;
+    flex: 1;
+    min-width: 120px;
+  }
+  
+  .controls input,
+  .controls select {
+    padding: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text);
+    font-size: 1rem;
+    transition: all 0.3s ease;
+  }
+  
+  .controls input:focus,
+  .controls select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(233, 30, 99, 0.2);
+  }
+  
+  .controls input[type="range"] {
+    -webkit-appearance: none;
+    height: 8px;
+    background: var(--surface);
+    border-radius: 4px;
+    margin-top: 0.5rem;
+  }
+  
+  .controls input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--primary);
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+  }
+  
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+  }
+  
+  .stat {
+    text-align: center;
+    background: var(--surface-light);
+    padding: 1.5rem;
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  
+  .stat-title {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  
+  .stat-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+    background: linear-gradient(90deg, #fff, #ccc);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  
+  .stat-subtitle {
+    font-size: 1rem;
+    color: var(--text-secondary);
+  }
+  
+  .progress-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 1rem;
+  }
+  
+  .progress-inner {
+    height: 100%;
+    transition: width 0.5s ease;
+  }
+  
+  .stay-bar {
+    background: var(--stay);
+  }
+  
+  .switch-bar {
+    background: var(--switch);
+  }
+  
+  .chart-container {
+    margin-top: 2rem;
+    position: relative;
+    height: 250px;
+  }
+  
+  .game-info {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    z-index: 10;
+  }
+  
+  .game-info i {
+    color: var(--primary);
+  }
+  
+  .status-message {
+    text-align: center;
+    padding: 1rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text);
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .spotlight {
+    position: absolute;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(255, 235, 59, 0.2) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+  
+  .spotlight.active {
+    opacity: 1;
+  }
+  
+  .confetti-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1000;
+  }
+  
+  @media (max-width: 768px) {
+    .logo {
+      font-size: 2.2rem;
+    }
+    
+    .card-title {
+      font-size: 1.2rem;
+    }
+    
+    .stat-value {
+      font-size: 2rem;
+    }
+    
+    .controls {
+      flex-direction: column;
+    }
+    
+    .control-group {
+      width: 100%;
+    }
+  }
+  
+  /* Animaciones */
+  @keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+  }
+  
+  .pulse {
+    animation: pulse 1.5s infinite;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  .fade-in {
+    animation: fadeIn 0.5s forwards;
+  }
+  
+  /* Tooltip personalizado */
+  .tooltip {
+    position: relative;
+    display: inline-block;
+  }
+  
+  .tooltip .tooltip-text {
+    visibility: hidden;
+    width: 200px;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 10px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    font-size: 0.85rem;
+    line-height: 1.4;
+  }
+  
+  .tooltip:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+  }
+</style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>Paradoja de Monty Hall</h1>
-      <p>Visualiza paso a paso por qué cambiar suele ser la mejor estrategia.</p>
-    </header>
+<div class="container">
+  <header>
+    <h1 class="logo">¡El Gran Dilema!</h1>
+    <p class="subtitle">La fascinante Paradoja de Monty Hall: ¿Cambiar o mantener?</p>
+  </header>
 
-    <!-- Escenario -->
-    <div class="card">
-      <h2 class="card-title"><i class="fas fa-door-open"></i> Escenario</h2>
+  <!-- Escenario -->
+  <div class="card">
+    <h2 class="card-title"><i class="fas fa-door-open"></i> Escenario del Concurso</h2>
+    <div class="status-message" id="statusMessage">
+      ¡Bienvenido al concurso! Selecciona una estrategia y pulsa "Iniciar" para comenzar.
+    </div>
+    <div class="stage">
+      <div class="spotlight" id="spotlight"></div>
+      <div class="game-info">
+        <i class="fas fa-info-circle"></i>
+        <span id="gameInfo">Ronda: 0 / 0</span>
+      </div>
       <div class="canvas-container">
         <canvas id="montyCanvas" width="820" height="360"></canvas>
       </div>
     </div>
+  </div>
 
-    <!-- Controles -->
-    <div class="card">
-      <h2 class="card-title"><i class="fas fa-sliders"></i> Controles</h2>
-      <div class="controls">
-        <button id="btnStart"  class="btn-primary"><i class="fas fa-play"></i> Iniciar</button>
-        <button id="btnPause"  class="btn-secondary" disabled><i class="fas fa-pause"></i> Pausar</button>
+  <!-- Controles -->
+  <div class="card">
+    <h2 class="card-title"><i class="fas fa-sliders"></i> Panel de Control</h2>
+    <div class="controls">
+      <div class="control-group">
+        <div class="control-group-title">Acciones</div>
+        <button id="btnStart" class="btn-primary pulse"><i class="fas fa-play"></i> Iniciar</button>
+        <button id="btnPause" class="btn-secondary" disabled><i class="fas fa-pause"></i> Pausar</button>
         <button id="btnResume" class="btn-secondary" disabled><i class="fas fa-play"></i> Reanudar</button>
-        <button id="btnReset"  class="btn-secondary" disabled><i class="fas fa-redo"></i> Reiniciar</button>
-
-        <label>Velocidad ×<span id="speedLabel">1</span>
+        <button id="btnReset" class="btn-secondary" disabled><i class="fas fa-redo"></i> Reiniciar</button>
+      </div>
+      
+      <div class="control-group">
+        <div class="control-group-title">Configuración</div>
+        <label class="tooltip">
+          Velocidad ×<span id="speedLabel">1</span>
           <input type="range" id="speedRange" min="0.25" max="10" step="0.25" value="1">
+          <span class="tooltip-text">Ajusta la velocidad de la simulación</span>
         </label>
-        <label>Puertas<select id="selDoors"><option>3</option><option>4</option><option>5</option><option>6</option></select></label>
-        <label>Tiradas<input type="number" id="inpTrials" value="500" min="1"></label>
-        <label>Estrategia<select id="selStrategy">
+        
+        <label class="tooltip">
+          Puertas
+          <select id="selDoors">
+            <option>3</option>
+            <option>4</option>
+            <option>5</option>
+            <option>6</option>
+          </select>
+          <span class="tooltip-text">Número de puertas en el juego</span>
+        </label>
+        
+        <label class="tooltip">
+          Tiradas
+          <input type="number" id="inpTrials" value="500" min="1">
+          <span class="tooltip-text">Número total de rondas a simular</span>
+        </label>
+      </div>
+      
+      <div class="control-group">
+        <div class="control-group-title">Estrategia y Visualización</div>
+        <label class="tooltip">
+          Estrategia
+          <select id="selStrategy">
             <option value="mantener">Mantener</option>
             <option value="cambiar">Cambiar</option>
             <option value="aleatoria">Aleatoria</option>
             <option value="manual">Manual</option>
-          </select></label>
-        <label>Gráfico<select id="selChart"><option value="line">Línea</option><option value="bar">Barras</option><option value="doughnut">Anillo</option><option value="stacked">Área apilada</option></select></label>
+          </select>
+          <span class="tooltip-text">Elige si mantienes tu elección inicial o cambias de puerta</span>
+        </label>
+        
+        <label class="tooltip">
+          Gráfico
+          <select id="selChart">
+            <option value="line">Línea</option>
+            <option value="bar">Barras</option>
+            <option value="doughnut">Anillo</option>
+            <option value="stacked">Área apilada</option>
+          </select>
+          <span class="tooltip-text">Tipo de gráfico para visualizar resultados</span>
+        </label>
       </div>
-    </div>
-
-    <!-- Resultados -->
-    <div class="card">
-      <h2 class="card-title"><i class="fas fa-chart-bar"></i> Resultados</h2>
-      <div class="stats-grid">
-        <div class="stat"><div>Tirada</div><div id="currentTrial" class="stat-value">0</div><div>de <span id="maxTrials">500</span></div></div>
-        <div class="stat"><div>Victorias mantener</div><div id="stayWins" class="stat-value">0</div><div id="stayPct">(0%)</div><div class="progress-bar"><div id="stayBar" class="progress-inner stay-bar" style="width:0%"></div></div></div>
-        <div class="stat"><div>Victorias cambiar</div><div id="switchWins" class="stat-value">0</div><div id="switchPct">(0%)</div><div class="progress-bar"><div id="switchBar" class="progress-inner switch-bar" style="width:0%"></div></div></div>
-      </div>
-      <canvas id="statsChart" height="120"></canvas>
     </div>
   </div>
 
-  <script>
-  document.addEventListener('DOMContentLoaded',()=>{
-
-    /* ---------- Polyfill roundRect ---------- */
-    if(!CanvasRenderingContext2D.prototype.roundRect){
-      CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r=8){
-        if(typeof r==='number')r={tl:r,tr:r,br:r,bl:r};
-        this.beginPath();
-        this.moveTo(x+r.tl,y);
-        this.lineTo(x+w-r.tr,y);this.quadraticCurveTo(x+w,y,x+w,y+r.tr);
-        this.lineTo(x+w,y+h-r.br);this.quadraticCurveTo(x+w,y+h,x+w-r.br,y+h);
-        this.lineTo(x+r.bl,y+h);this.quadraticCurveTo(x,y+h,x,y+h-r.bl);
-        this.lineTo(x,y+r.tl);this.quadraticCurveTo(x,y,x+r.tl,y);
-        this.closePath();
-      };
-    }
-
-    /* ---------- Config & estado ---------- */
-    const cfg={doors:3,total:500,speed:1,strategy:'mantener',doorW:140,doorH:210,gap:40,delay:600};
-    const st={trial:0,stayWin:0,switchWin:0,running:false,paused:false,manualStage:'idle',initialPick:null,hostOpen:null,doors:null,remainingClosed:null};
-
-    /* ---------- DOM refs ---------- */
-    const $=id=>document.getElementById(id);
-    const canvas=$('montyCanvas');const ctx=canvas.getContext('2d');
-    const btnStart=$('btnStart'),btnPause=$('btnPause'),btnResume=$('btnResume'),btnReset=$('btnReset');
-    const canvasContainer=canvas.parentElement;
-
-    /* ---------- Responsive Canvas ---------- */
-    function adjustCanvasWidth() {
-      // Calcular el ancho necesario para mostrar todas las puertas
-      const neededWidth = cfg.doors * cfg.doorW + (cfg.doors - 1) * cfg.gap + 80; // añadimos margen
-      const containerWidth = canvasContainer.clientWidth;
+  <!-- Resultados -->
+  <div class="card">
+    <h2 class="card-title"><i class="fas fa-trophy"></i> Resultados</h2>
+    <div class="stats-grid">
+      <div class="stat">
+        <div class="stat-title">Ronda Actual</div>
+        <div id="currentTrial" class="stat-value">0</div>
+        <div class="stat-subtitle">de <span id="maxTrials">500</span> tiradas</div>
+      </div>
       
-      // Establecer el ancho del canvas según sea necesario
-      if (neededWidth > containerWidth) {
-        canvas.width = neededWidth;
-        canvas.style.width = neededWidth + 'px';
-      } else {
-        canvas.width = containerWidth;
-        canvas.style.width = '100%';
-      }
+      <div class="stat">
+        <div class="stat-title">Victorias Manteniendo</div>
+        <div id="stayWins" class="stat-value">0</div>
+        <div id="stayPct" class="stat-subtitle">(0%)</div>
+        <div class="progress-bar">
+          <div id="stayBar" class="progress-inner stay-bar" style="width:0%"></div>
+        </div>
+      </div>
       
-      // Actualizar la escena si hay puertas presentes
-      if (st.doors) {
-        drawScene(st.doors);
-      } else {
-        drawScene([...Array(cfg.doors).keys()].map(() => ({open: false, hasPrize: false})));
-      }
-    }
-
-    // Ajustar el canvas cuando cambie el tamaño de la ventana
-    window.addEventListener('resize', adjustCanvasWidth);
-
-    /* ---------- Chart ---------- */
-    let chart;const chartCtx=$('statsChart').getContext('2d');
-
-    function buildChart(type){
-      if(chart)chart.destroy();
-      const base={labels:[],datasets:[
-        {label:'Mantener',data:[],borderColor:'#4361ee',backgroundColor:'rgba(67,97,238,.2)',fill:(type==='stacked'),tension:.25},
-        {label:'Cambiar',data:[],borderColor:'#ff9f1c',backgroundColor:'rgba(255,159,28,.2)',fill:(type==='stacked'),tension:.25}
-      ]};
-      if(type==='line'||type==='stacked'){
-        chart=new Chart(chartCtx,{type:'line',data:base,options:{animation:false,scales:{y:{beginAtZero:true,max:100,ticks:{callback:v=>v+'%'}}}}});
-      }else if(type==='bar'){
-        chart=new Chart(chartCtx,{type:'bar',data:{labels:['Mantener','Cambiar'],datasets:[{data:[0,0],backgroundColor:['#4361ee','#ff9f1c']}]},options:{animation:false,scales:{y:{beginAtZero:true,max:100,ticks:{callback:v=>v+'%'}}}}});
-      }else{
-        chart=new Chart(chartCtx,{type:'doughnut',data:{labels:['Mantener','Cambiar'],datasets:[{data:[0,0],backgroundColor:['#4361ee','#ff9f1c']}]},options:{animation:false}});
-      }
-    }
-    buildChart('line');
-
-    /* ---------- Dibujo ---------- */
-    function drawDoor(x,y,i,open,prize,highlight,colorBorder='#e58f00'){
-      ctx.save();
-      ctx.shadowColor='rgba(0,0,0,.08)';ctx.shadowBlur=6;ctx.shadowOffsetX=3;ctx.shadowOffsetY=3;
-      if(!open){
-        ctx.beginPath();ctx.roundRect(x,y,cfg.doorW,cfg.doorH,8);
-        const g=ctx.createLinearGradient(x,y,x+cfg.doorW,y);
-        g.addColorStop(0,highlight?colorBorder:'#9a5d2d');g.addColorStop(1,highlight?colorBorder:'#7d4b27');
-        ctx.fillStyle=g;ctx.fill();
-        ctx.lineWidth=highlight?4:2;ctx.strokeStyle=highlight?colorBorder:'#503117';ctx.stroke();
-        ctx.shadowBlur=0;ctx.fillStyle='#fff';ctx.font='bold 30px Poppins';ctx.textAlign='center';ctx.textBaseline='middle';
-        ctx.fillText(i+1,x+cfg.doorW/2,y+cfg.doorH/2);
-      }else{
-        ctx.beginPath();ctx.roundRect(x,y,cfg.doorW,cfg.doorH,8);
-        ctx.lineWidth=4;ctx.strokeStyle='#8b5a2b';ctx.stroke();
-        ctx.fillStyle=prize?'rgba(255,222,89,.5)':'rgba(232,232,232,.75)';ctx.fill();
-        ctx.fillStyle='#000';ctx.font='bold 22px Poppins';ctx.textAlign='center';ctx.textBaseline='middle';
-        ctx.fillText(prize?'PREMIO':'CABRA',x+cfg.doorW/2,y+cfg.doorH/2);
-      }
-      ctx.restore();
-    }
-
-    function drawScene(doors,highlight=-1,highlightColor){
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      const bg=ctx.createLinearGradient(0,0,0,canvas.height);
-      bg.addColorStop(0,'#f8fafc');bg.addColorStop(1,'#e2e8f0');
-      ctx.fillStyle=bg;ctx.fillRect(0,0,canvas.width,canvas.height);
-      const startX=(canvas.width-(cfg.doors*cfg.doorW+(cfg.doors-1)*cfg.gap))/2;
-      doors.forEach((d,i)=>drawDoor(startX+i*(cfg.doorW+cfg.gap),60,i,d.open,d.hasPrize,i===highlight,highlightColor));
-    }
-
-    function clickToDoorIdx(evt){
-      const rect=canvas.getBoundingClientRect();
-      const x=evt.clientX-rect.left;
-      const startX=(canvas.width-(cfg.doors*cfg.doorW+(cfg.doors-1)*cfg.gap))/2;
-      for(let i=0;i<cfg.doors;i++){
-        const dx=startX+i*(cfg.doorW+cfg.gap);
-        if(x>=dx && x<=dx+cfg.doorW) return i;
-      }
-      return -1;
-    }
-
-    /* ---------- UI Stats ---------- */
-    function updateStats(){
-      $('currentTrial').textContent=st.trial;$('maxTrials').textContent=cfg.total;
-      $('stayWins').textContent=st.stayWin;$('switchWins').textContent=st.switchWin;
-      const pS=st.trial?(st.stayWin/st.trial*100).toFixed(1):0;
-      const pC=st.trial?(st.switchWin/st.trial*100).toFixed(1):0;
-      $('stayPct').textContent=`(${pS}%)`;$('switchPct').textContent=`(${pC}%)`;
-      $('stayBar').style.width=pS+'%';$('switchBar').style.width=pC+'%';
-      const mode=$('selChart').value;
-      if(mode==='line'||mode==='stacked'){chart.data.labels.push(st.trial);chart.data.datasets[0].data.push(pS);chart.data.datasets[1].data.push(pC);}else{chart.data.datasets[0].data=[pS,pC];}
-      chart.update('none');
-    }
-
-    /* ---------- Lógica automática ---------- */
-    const wait=ms=>new Promise(r=>setTimeout(r,ms));
+      <div class="stat">
+        <div class="stat-title">Victorias Cambiando</div>
+        <div id="switchWins" class="stat-value">0</div>
+        <div id="switchPct" class="stat-subtitle">(0%)</div>
+        <div class="progress-bar">
+          <div id="switchBar" class="progress-inner switch-bar" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
     
-    async function autoRound(){
-      // Asegurar exactamente un premio entre todas las puertas
-      const prize = Math.floor(Math.random() * cfg.doors);
-      const pick = Math.floor(Math.random() * cfg.doors);
-      
-      // Crear puertas
-      const doors = [...Array(cfg.doors).keys()].map(i => ({
-        open: false,
-        hasPrize: i === prize
-      }));
+    <div class="chart-container">
+      <canvas id="statsChart" height="250"></canvas>
+    </div>
+  </div>
+  
+  <div class="confetti-container" id="confettiContainer"></div>
+</div>
 
-      // Mostrar selección inicial
-      drawScene(doors, pick, '#ffcf1c'); 
-      await wait(cfg.delay/cfg.speed);
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+  /* ---------- Polyfill roundRect ---------- */
+  if (!CanvasRenderingContext2D.prototype.roundRect) {
+    CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r = 8) {
+      if (typeof r === 'number') r = {tl: r, tr: r, br: r, bl: r};
+      this.beginPath();
+      this.moveTo(x + r.tl, y);
+      this.lineTo(x + w - r.tr, y); this.quadraticCurveTo(x + w, y, x + w, y + r.tr);
+      this.lineTo(x + w, y + h - r.br); this.quadraticCurveTo(x + w, y + h, x + w - r.br, y + h);
+      this.lineTo(x + r.bl, y + h); this.quadraticCurveTo(x, y + h, x, y + h - r.bl);
+      this.lineTo(x, y + r.tl); this.quadraticCurveTo(x, y, x + r.tl, y);
+      this.closePath();
+    };
+  }
+
+  /* ---------- Config & estado ---------- */
+  const cfg = {
+    doors: 3,
+    total: 500,
+    speed: 1,
+    strategy: 'mantener',
+    doorW: 140,
+    doorH: 210,
+    gap: 40,
+    delay: 600
+  };
+  
+  const st = {
+    trial: 0,
+    stayWin: 0,
+    switchWin: 0,
+    running: false,
+    paused: false,
+    manualStage: 'idle',
+    initialPick: null,
+    hostOpen: null,
+    doors: null,
+    remainingClosed: null,
+    lastWin: false
+  };
+
+  /* ---------- DOM refs ---------- */
+  const $ = id => document.getElementById(id);
+  const canvas = $('montyCanvas');
+  const ctx = canvas.getContext('2d');
+  const btnStart = $('btnStart');
+  const btnPause = $('btnPause');
+  const btnResume = $('btnResume');
+  const btnReset = $('btnReset');
+  const canvasContainer = canvas.parentElement;
+  const statusMessage = $('statusMessage');
+  const gameInfo = $('gameInfo');
+  const spotlight = $('spotlight');
+
+  /* ---------- Mensajes de estado ---------- */
+  const messages = {
+    welcome: "¡Bienvenido al concurso! Selecciona una estrategia y pulsa 'Iniciar' para comenzar.",
+    chooseDoor: "¡Elige una puerta! ¿Dónde crees que está el premio?",
+    doorSelected: "¡Has elegido la puerta #DOOR! Veamos qué hay detrás de las otras...",
+    hostOpening: "El presentador está abriendo puertas sin premio...",
+    finalChoice: "¡Momento de la decisión final! ¿Mantienes tu elección o cambias?",
+    staySelected: "Has decidido MANTENER tu elección inicial. ¡Veamos si has ganado!",
+    switchSelected: "Has decidido CAMBIAR tu elección inicial. ¡Veamos si has ganado!",
+    win: "¡FELICIDADES! ¡Has GANADO el PREMIO!",
+    lose: "¡Oh no! Has perdido esta vez. La cabra te saluda.",
+    autoRunning: "Simulación automática en curso... Estrategia: #STRATEGY",
+    paused: "Simulación en pausa. Pulsa 'Reanudar' para continuar.",
+    completed: "¡Simulación completada! Pulsa 'Reiniciar' para comenzar de nuevo."
+  };
+
+  function updateStatusMessage(key, replacements = {}) {
+    let message = messages[key] || key;
+    
+    // Reemplazar variables en el mensaje
+    for (const [placeholder, value] of Object.entries(replacements)) {
+      message = message.replace(`#${placeholder}`, value);
+    }
+    
+    statusMessage.textContent = message;
+    
+    // Añadir animación
+    statusMessage.classList.remove('fade-in');
+    void statusMessage.offsetWidth; // Forzar reflow
+    statusMessage.classList.add('fade-in');
+  }
+
+  /* ---------- Efectos visuales ---------- */
+  function moveSpotlight(x, y) {
+    spotlight.style.left = `${x - 150}px`;
+    spotlight.style.top = `${y - 150}px`;
+    spotlight.classList.add('active');
+  }
+  
+  function hideSpotlight() {
+    spotlight.classList.remove('active');
+  }
+  
+  function celebrateWin() {
+    // Lanzar confeti
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 }
+    });
+    
+    // Hacer que el valor de victorias pulse
+    const winElement = st.lastWin ? 
+      (cfg.strategy === 'cambiar' || (cfg.strategy === 'manual' && st.initialPick !== st.finalPick) ? $('switchWins') : $('stayWins')) : 
+      null;
       
-      // Ahora el presentador abre todas las puertas vacías excepto una
-      // No abre: la puerta del concursante y una puerta adicional (que puede o no tener el premio)
+    if (winElement) {
+      winElement.classList.add('pulse');
+      setTimeout(() => {
+        winElement.classList.remove('pulse');
+      }, 2000);
+    }
+  }
+
+  /* ---------- Responsive Canvas ---------- */
+  function adjustCanvasWidth() {
+    // Calcular el ancho necesario para mostrar todas las puertas
+    const neededWidth = cfg.doors * cfg.doorW + (cfg.doors - 1) * cfg.gap + 80; // añadimos margen
+    const containerWidth = canvasContainer.clientWidth;
+    
+    // Establecer el ancho del canvas según sea necesario
+    if (neededWidth > containerWidth) {
+      canvas.width = neededWidth;
+      canvas.style.width = neededWidth + 'px';
+    } else {
+      canvas.width = containerWidth;
+      canvas.style.width = '100%';
+    }
+    
+    // Actualizar la escena si hay puertas presentes
+    if (st.doors) {
+      drawScene(st.doors);
+    } else {
+      drawScene([...Array(cfg.doors).keys()].map(() => ({open: false, hasPrize: false})));
+    }
+  }
+
+  // Ajustar el canvas cuando cambie el tamaño de la ventana
+  window.addEventListener('resize', adjustCanvasWidth);
+
+  /* ---------- Chart ---------- */
+  let chart;
+  const chartCtx = $('statsChart').getContext('2d');
+  
+  // Configuración personalizada para Chart.js
+  Chart.defaults.color = '#b0b0c0';
+  Chart.defaults.font.family = "'Montserrat', sans-serif";
+
+  function buildChart(type) {
+    if (chart) chart.destroy();
+    
+    const base = {
+      labels: [],
+      datasets: [
+        {
+          label: 'Mantener',
+          data: [],
+          borderColor: '#4caf50',
+          backgroundColor: 'rgba(76, 175, 80, 0.2)',
+          fill: (type === 'stacked'),
+          tension: 0.25
+        },
+        {
+          label: 'Cambiar',
+          data: [],
+          borderColor: '#2196f3',
+          backgroundColor: 'rgba(33, 150, 243, 0.2)',
+          fill: (type === 'stacked'),
+          tension: 0.25
+        }
+      ]
+    };
+    
+    const options = {
+      animation: false,
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: {
+          position: 'top',
+          labels: {
+            padding: 20,
+            usePointStyle: true,
+            font: {
+              size: 12
+            }
+          }
+        },
+        tooltip: {
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          padding: 12,
+          titleFont: {
+            size: 14,
+            weight: 'bold'
+          },
+          bodyFont: {
+            size: 13
+          },
+          cornerRadius: 8,
+          boxPadding: 6
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 100,
+          grid: {
+            color: 'rgba(255, 255, 255, 0.05)'
+          },
+          ticks: {
+            callback: v => v + '%',
+            font: {
+              size: 11
+            }
+          }
+        },
+        x: {
+          grid: {
+            color: 'rgba(255, 255, 255, 0.05)'
+          },
+          ticks: {
+            font: {
+              size: 11
+            }
+          }
+        }
+      }
+    };
+    
+    if (type === 'line' || type === 'stacked') {
+      chart = new Chart(chartCtx, {
+        type: 'line',
+        data: base,
+        options: options
+      });
+    } else if (type === 'bar') {
+      chart = new Chart(chartCtx, {
+        type: 'bar',
+        data: {
+          labels: ['Mantener', 'Cambiar'],
+          datasets: [{
+            data: [0, 0],
+            backgroundColor: ['#4caf50', '#2196f3']
+          }]
+        },
+        options: options
+      });
+    } else {
+      chart = new Chart(chartCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Mantener', 'Cambiar'],
+          datasets: [{
+            data: [0, 0],
+            backgroundColor: ['#4caf50', '#2196f3']
+          }]
+        },
+        options: {
+          animation: false,
+          cutout: '70%',
+          plugins: {
+            legend: {
+              position: 'top',
+              labels: {
+                padding: 20,
+                usePointStyle: true
+              }
+            }
+          }
+        }
+      });
+    }
+  }
+  buildChart('line');
+
+  /* ---------- Dibujo ---------- */
+  function drawDoor(x, y, i, open, prize, highlight, colorBorder = '#ff9800') {
+    ctx.save();
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+    ctx.shadowBlur = 10;
+    ctx.shadowOffsetX = 5;
+    ctx.shadowOffsetY = 5;
+    
+    if (!open) {
+      // Puerta cerrada
+      ctx.beginPath();
+      ctx.roundRect(x, y, cfg.doorW, cfg.doorH, 12);
       
-      // Primero, identificar todas las puertas que no son la selección inicial y no tienen premio
-      const emptyDoorsToOpen = [...Array(cfg.doors).keys()]
-        .filter(i => i !== pick && !doors[i].hasPrize);
+      // Gradiente para la puerta
+      const g = ctx.createLinearGradient(x, y, x + cfg.doorW, y + cfg.doorH);
       
-      // Si la puerta seleccionada tiene el premio, dejamos una puerta vacía sin abrir
-      let remainingClosedDoor = -1;
-      if (pick === prize) {
-        // Seleccionamos una puerta vacía para dejar cerrada
-        if (emptyDoorsToOpen.length > 0) {
-          const randomIdx = Math.floor(Math.random() * emptyDoorsToOpen.length);
-          remainingClosedDoor = emptyDoorsToOpen[randomIdx];
-          // Eliminamos esta puerta de las que se abrirán
-          emptyDoorsToOpen.splice(randomIdx, 1);
+      if (highlight) {
+        g.addColorStop(0, colorBorder);
+        g.addColorStop(1, shadeColor(colorBorder, -20));
+        ctx.lineWidth = 6;
+        ctx.strokeStyle = '#ffffff';
+      } else {
+        g.addColorStop(0, '#9a5d2d');
+        g.addColorStop(1, '#7d4b27');
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#503117';
+      }
+      
+      ctx.fillStyle = g;
+      ctx.fill();
+      ctx.stroke();
+      
+      // Detalles de la puerta
+      ctx.shadowBlur = 0;
+      
+      // Marco de la puerta
+      ctx.beginPath();
+      ctx.roundRect(x + 10, y + 10, cfg.doorW - 20, cfg.doorH - 20, 8);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = highlight ? '#ffffff' : '#5d3a1a';
+      ctx.stroke();
+      
+      // Pomo de la puerta
+      ctx.beginPath();
+      ctx.arc(x + cfg.doorW - 25, y + cfg.doorH / 2, 8, 0, Math.PI * 2);
+      ctx.fillStyle = highlight ? '#ffffff' : '#d4af37';
+      ctx.fill();
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = '#000000';
+      ctx.stroke();
+      
+      // Número de la puerta
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 32px Montserrat';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(i + 1, x + cfg.doorW / 2, y + cfg.doorH / 2);
+      
+      // Efecto de brillo si está resaltada
+      if (highlight) {
+        ctx.beginPath();
+        ctx.roundRect(x, y, cfg.doorW, cfg.doorH, 12);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.stroke();
+        
+        // Efecto de resplandor
+        const glow = ctx.createRadialGradient(
+          x + cfg.doorW / 2, y + cfg.doorH / 2, 10,
+          x + cfg.doorW / 2, y + cfg.doorH / 2, cfg.doorW / 1.5
+        );
+        glow.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
+        glow.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.fillStyle = glow;
+        ctx.fill();
+      }
+    } else {
+      // Puerta abierta
+      ctx.beginPath();
+      ctx.roundRect(x, y, cfg.doorW, cfg.doorH, 12);
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = '#8b5a2b';
+      ctx.stroke();
+      
+      // Fondo de la puerta abierta
+      const bgColor = prize ? 'rgba(255, 222, 89, 0.3)' : 'rgba(232, 232, 232, 0.2)';
+      ctx.fillStyle = bgColor;
+      ctx.fill();
+      
+      // Contenido detrás de la puerta
+      if (prize) {
+        // Dibujar premio (trofeo)
+        const trophyX = x + cfg.doorW / 2;
+        const trophyY = y + cfg.doorH / 2;
+        
+        // Base del trofeo
+        ctx.beginPath();
+        ctx.moveTo(trophyX - 30, trophyY + 40);
+        ctx.lineTo(trophyX + 30, trophyY + 40);
+        ctx.lineTo(trophyX + 25, trophyY + 30);
+        ctx.lineTo(trophyX - 25, trophyY + 30);
+        ctx.closePath();
+        ctx.fillStyle = '#d4af37';
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#aa8c2c';
+        ctx.stroke();
+        
+        // Soporte
+        ctx.beginPath();
+        ctx.rect(trophyX - 5, trophyY, 10, 30);
+        ctx.fillStyle = '#d4af37';
+        ctx.fill();
+        ctx.strokeStyle = '#aa8c2c';
+        ctx.stroke();
+        
+        // Copa
+        ctx.beginPath();
+        ctx.moveTo(trophyX - 20, trophyY);
+        ctx.quadraticCurveTo(trophyX - 25, trophyY - 40, trophyX, trophyY - 50);
+        ctx.quadraticCurveTo(trophyX + 25, trophyY - 40, trophyX + 20, trophyY);
+        ctx.closePath();
+        
+        // Gradiente para la copa
+        const cupGradient = ctx.createLinearGradient(trophyX - 20, trophyY - 25, trophyX + 20, trophyY - 25);
+        cupGradient.addColorStop(0, '#ffd700');
+        cupGradient.addColorStop(0.5, '#fff5aa');
+        cupGradient.addColorStop(1, '#ffd700');
+        
+        ctx.fillStyle = cupGradient;
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#aa8c2c';
+        ctx.stroke();
+        
+        // Texto "PREMIO"
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 24px Montserrat';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('¡PREMIO!', trophyX, trophyY + 70);
+        
+        // Destellos alrededor del trofeo
+        for (let i = 0; i < 8; i++) {
+          const angle = (i / 8) * Math.PI * 2;
+          const starX = trophyX + Math.cos(angle) * 60;
+          const starY = trophyY - 20 + Math.sin(angle) * 60;
+          
+          ctx.beginPath();
+          ctx.moveTo(starX, starY);
+          for (let j = 0; j < 5; j++) {
+            const starAngle = angle + (j / 5) * Math.PI * 2;
+            const length = j % 2 === 0 ? 10 : 5;
+            const pointX = starX + Math.cos(starAngle) * length;
+            const pointY = starY + Math.sin(starAngle) * length;
+            ctx.lineTo(pointX, pointY);
+          }
+          ctx.closePath();
+          ctx.fillStyle = '#ffeb3b';
+          ctx.fill();
         }
       } else {
-        // Si la puerta seleccionada no tiene el premio, dejamos cerrada la que tiene el premio
-        remainingClosedDoor = prize;
+        // Dibujar cabra
+        const goatX = x + cfg.doorW / 2;
+        const goatY = y + cfg.doorH / 2;
+        
+        // Cuerpo de la cabra
+        ctx.beginPath();
+        ctx.ellipse(goatX, goatY + 10, 30, 20, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#e0e0e0';
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#a0a0a0';
+        ctx.stroke();
+        
+        // Cabeza
+        ctx.beginPath();
+        ctx.ellipse(goatX - 30, goatY, 15, 10, 0.5, 0, Math.PI * 2);
+        ctx.fillStyle = '#e0e0e0';
+        ctx.fill();
+        ctx.strokeStyle = '#a0a0a0';
+        ctx.stroke();
+        
+        // Orejas
+        ctx.beginPath();
+        ctx.ellipse(goatX - 35, goatY - 12, 5, 8, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#e0e0e0';
+        ctx.fill();
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.ellipse(goatX - 30, goatY - 14, 5, 8, 0.5, 0, Math.PI * 2);
+        ctx.fillStyle = '#e0e0e0';
+        ctx.fill();
+        ctx.stroke();
+        
+        // Cuernos
+        ctx.beginPath();
+        ctx.moveTo(goatX - 35, goatY - 5);
+        ctx.lineTo(goatX - 45, goatY - 15);
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#a0a0a0';
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.moveTo(goatX - 30, goatY - 8);
+        ctx.lineTo(goatX - 38, goatY - 20);
+        ctx.stroke();
+        
+        // Patas
+        ctx.beginPath();
+        ctx.moveTo(goatX - 15, goatY + 20);
+        ctx.lineTo(goatX - 15, goatY + 40);
+        ctx.moveTo(goatX + 15, goatY + 20);
+        ctx.lineTo(goatX + 15, goatY + 40);
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#a0a0a0';
+        ctx.stroke();
+        
+        // Ojos
+        ctx.beginPath();
+        ctx.arc(goatX - 35, goatY - 2, 2, 0, Math.PI * 2);
+        ctx.fillStyle = '#000000';
+        ctx.fill();
+        
+        // Texto "CABRA"
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 24px Montserrat';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('¡CABRA!', goatX, goatY + 70);
       }
       
-      // Animación de abrir todas las puertas vacías
-      for (const doorIdx of emptyDoorsToOpen) {
-        doors[doorIdx].open = true;
-        drawScene(doors, pick, '#ffcf1c');
-        await wait(Math.min(cfg.delay/cfg.speed, 300)); // Para no tardar demasiado con muchas puertas
+      // Efecto de resaltado si está seleccionada
+      if (highlight) {
+        ctx.beginPath();
+        ctx.roundRect(x, y, cfg.doorW, cfg.doorH, 12);
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = colorBorder;
+        ctx.stroke();
+        
+        // Efecto de resplandor
+        const glow = ctx.createRadialGradient(
+          x + cfg.doorW / 2, y + cfg.doorH / 2, 10,
+          x + cfg.doorW / 2, y + cfg.doorH / 2, cfg.doorW / 1.5
+        );
+        glow.addColorStop(0, `rgba(${colorToRGB(colorBorder)}, 0.3)`);
+        glow.addColorStop(1, `rgba(${colorToRGB(colorBorder)}, 0)`);
+        ctx.fillStyle = glow;
+        ctx.fill();
+      }
+    }
+    
+    ctx.restore();
+  }
+
+  // Función auxiliar para convertir color a RGB
+  function colorToRGB(color) {
+    // Crear un elemento temporal
+    const temp = document.createElement('div');
+    temp.style.color = color;
+    document.body.appendChild(temp);
+    
+    // Obtener el color computado
+    const style = window.getComputedStyle(temp);
+    const rgb = style.color;
+    
+    document.body.removeChild(temp);
+    
+    // Extraer valores RGB
+    const match = rgb.match(/\d+/g);
+    if (match && match.length >= 3) {
+      return `${match[0]}, ${match[1]}, ${match[2]}`;
+    }
+    
+    return '255, 255, 255'; // Valor por defecto
+  }
+
+  // Función para oscurecer o aclarar un color
+  function shadeColor(color, percent) {
+    let R = parseInt(color.substring(1, 3), 16);
+    let G = parseInt(color.substring(3, 5), 16);
+    let B = parseInt(color.substring(5, 7), 16);
+
+    R = parseInt(R * (100 + percent) / 100);
+    G = parseInt(G * (100 + percent) / 100);
+    B = parseInt(B * (100 + percent) / 100);
+
+    R = (R < 255) ? R : 255;
+    G = (G < 255) ? G : 255;
+    B = (B < 255) ? B : 255;
+
+    const RR = ((R.toString(16).length === 1) ? "0" + R.toString(16) : R.toString(16));
+    const GG = ((G.toString(16).length === 1) ? "0" + G.toString(16) : G.toString(16));
+    const BB = ((B.toString(16).length === 1) ? "0" + B.toString(16) : B.toString(16));
+
+    return "#" + RR + GG + BB;
+  }
+
+  function drawScene(doors, highlight = -1, highlightColor) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Fondo del escenario
+    const bg = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    bg.addColorStop(0, '#1a1a2e');
+    bg.addColorStop(1, '#0a0a1a');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Dibujar suelo
+    const floorY = 60 + cfg.doorH + 20;
+    ctx.beginPath();
+    ctx.moveTo(0, floorY);
+    ctx.lineTo(canvas.width, floorY);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.stroke();
+    
+    // Dibujar reflejo en el suelo
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+    ctx.fillRect(0, floorY, canvas.width, 40);
+    
+    // Dibujar luces de escenario
+    for (let i = 0; i < 5; i++) {
+      const lightX = canvas.width * (i + 1) / 6;
+      const lightY = 20;
+      
+      // Haz de luz
+      const lightGradient = ctx.createRadialGradient(
+        lightX, lightY, 0,
+        lightX, lightY, 150
+      );
+      lightGradient.addColorStop(0, 'rgba(255, 235, 59, 0.2)');
+      lightGradient.addColorStop(1, 'rgba(255, 235, 59, 0)');
+      
+      ctx.beginPath();
+      ctx.moveTo(lightX, lightY);
+      ctx.lineTo(lightX - 100, floorY);
+      ctx.lineTo(lightX + 100, floorY);
+      ctx.closePath();
+      ctx.fillStyle = lightGradient;
+      ctx.fill();
+      
+      // Lámpara
+      ctx.beginPath();
+      ctx.arc(lightX, lightY, 5, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffeb3b';
+      ctx.fill();
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = '#fbc02d';
+      ctx.stroke();
+    }
+    
+    // Calcular posición inicial para centrar las puertas
+    const startX = (canvas.width - (cfg.doors * cfg.doorW + (cfg.doors - 1) * cfg.gap)) / 2;
+    
+    // Dibujar puertas
+    doors.forEach((d, i) => {
+      drawDoor(startX + i * (cfg.doorW + cfg.gap), 60, i, d.open, d.hasPrize, i === highlight, highlightColor);
+    });
+    
+    // Actualizar información del juego
+    gameInfo.textContent = `Ronda: ${st.trial} / ${cfg.total}`;
+  }
+
+  function clickToDoorIdx(evt) {
+    const rect = canvas.getBoundingClientRect();
+    const x = evt.clientX - rect.left;
+    const y = evt.clientY - rect.top;
+    
+    // Calcular posición inicial para centrar las puertas
+    const startX = (canvas.width - (cfg.doors * cfg.doorW + (cfg.doors - 1) * cfg.gap)) / 2;
+    
+    // Verificar si el clic está dentro del área vertical de las puertas
+    if (y >= 60 && y <= 60 + cfg.doorH) {
+      for (let i = 0; i < cfg.doors; i++) {
+        const dx = startX + i * (cfg.doorW + cfg.gap);
+        if (x >= dx && x <= dx + cfg.doorW) {
+          return i;
+        }
+      }
+    }
+    
+    return -1;
+  }
+
+  /* ---------- UI Stats ---------- */
+  function updateStats() {
+    $('currentTrial').textContent = st.trial;
+    $('maxTrials').textContent = cfg.total;
+    $('stayWins').textContent = st.stayWin;
+    $('switchWins').textContent = st.switchWin;
+    
+    const pS = st.trial ? (st.stayWin / st.trial * 100).toFixed(1) : 0;
+    const pC = st.trial ? (st.switchWin / st.trial * 100).toFixed(1) : 0;
+    
+    $('stayPct').textContent = `(${pS}%)`;
+    $('switchPct').textContent = `(${pC}%)`;
+    $('stayBar').style.width = pS + '%';
+    $('switchBar').style.width = pC + '%';
+    
+    const mode = $('selChart').value;
+    if (mode === 'line' || mode === 'stacked') {
+      chart.data.labels.push(st.trial);
+      chart.data.datasets[0].data.push(pS);
+      chart.data.datasets[1].data.push(pC);
+    } else {
+      chart.data.datasets[0].data = [pS, pC];
+    }
+    
+    chart.update('none');
+  }
+
+  /* ---------- Lógica automática ---------- */
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  
+  async function autoRound() {
+    // Asegurar exactamente un premio entre todas las puertas
+    const prize = Math.floor(Math.random() * cfg.doors);
+    const pick = Math.floor(Math.random() * cfg.doors);
+    
+    // Crear puertas
+    const doors = [...Array(cfg.doors).keys()].map(i => ({
+      open: false,
+      hasPrize: i === prize
+    }));
+    
+    // Actualizar estado
+    st.doors = doors;
+    
+    // Mostrar mensaje de estrategia automática
+    updateStatusMessage('autoRunning', { STRATEGY: cfg.strategy });
+    
+    // Mostrar selección inicial
+    drawScene(doors, pick, '#ffeb3b');
+    await wait(cfg.delay / cfg.speed);
+    
+    // Ahora el presentador abre todas las puertas vacías excepto una
+    // No abre: la puerta del concursante y una puerta adicional (que puede o no tener el premio)
+    
+    // Primero, identificar todas las puertas que no son la selección inicial y no tienen premio
+    const emptyDoorsToOpen = [...Array(cfg.doors).keys()]
+      .filter(i => i !== pick && !doors[i].hasPrize);
+    
+    // Si la puerta seleccionada tiene el premio, dejamos una puerta vacía sin abrir
+    let remainingClosedDoor = -1;
+    if (pick === prize) {
+      // Seleccionamos una puerta vacía para dejar cerrada
+      if (emptyDoorsToOpen.length > 0) {
+        const randomIdx = Math.floor(Math.random() * emptyDoorsToOpen.length);
+        remainingClosedDoor = emptyDoorsToOpen[randomIdx];
+        // Eliminamos esta puerta de las que se abrirán
+        emptyDoorsToOpen.splice(randomIdx, 1);
+      }
+    } else {
+      // Si la puerta seleccionada no tiene el premio, dejamos cerrada la que tiene el premio
+      remainingClosedDoor = prize;
+    }
+    
+    // Mensaje de apertura
+    updateStatusMessage('hostOpening');
+    
+    // Animación de abrir todas las puertas vacías
+    for (const doorIdx of emptyDoorsToOpen) {
+      doors[doorIdx].open = true;
+      drawScene(doors, pick, '#ffeb3b');
+      await wait(Math.min(cfg.delay / cfg.speed, 300)); // Para no tardar demasiado con muchas puertas
+    }
+    
+    // Ahora solo quedan dos puertas cerradas: la selección inicial y la otra que dejamos
+    
+    // El concursante decide cambiar o mantener según la estrategia
+    const willSwitch = (cfg.strategy === 'cambiar') || 
+                      (cfg.strategy === 'aleatoria' && Math.random() < 0.5);
+    
+    const finalPick = willSwitch ? remainingClosedDoor : pick;
+    
+    // Mensaje de decisión
+    if (willSwitch) {
+      updateStatusMessage('switchSelected');
+    } else {
+      updateStatusMessage('staySelected');
+    }
+    
+    // Resaltar puerta final
+    drawScene(doors, finalPick, '#ff9800');
+    await wait(cfg.delay / cfg.speed);
+    
+    // Abrir puerta final
+    doors[finalPick].open = true;
+    drawScene(doors, finalPick, '#ff9800');
+    
+    // Determinar si ganó
+    const won = doors[finalPick].hasPrize;
+    st.lastWin = won;
+    
+    // Mensaje de resultado
+    updateStatusMessage(won ? 'win' : 'lose');
+    
+    // Celebrar si ganó
+    if (won) {
+      celebrateWin();
+    }
+    
+    await wait(cfg.delay / cfg.speed);
+    
+    // Abrir todas las puertas restantes
+    doors.forEach((d, i) => {
+      if (!d.open) d.open = true;
+    });
+    drawScene(doors, finalPick);
+    
+    // ACTUALIZACIÓN DE ESTADÍSTICAS:
+    // Siempre contamos si habría ganado manteniendo o cambiando,
+    // independientemente de la estrategia elegida
+    if (prize === pick) st.stayWin++; // Si el premio estaba en la elección inicial
+    else st.switchWin++; // Si el premio estaba en otra puerta
+    
+    st.trial++;
+    updateStats();
+    
+    // Esperar un poco antes de la siguiente ronda
+    await wait(cfg.delay / cfg.speed);
+  }
+
+  async function loop() {
+    while (st.running && st.trial < cfg.total) {
+      if (st.paused) {
+        updateStatusMessage('paused');
+        await wait(100);
+        continue;
       }
       
-      // Ahora solo quedan dos puertas cerradas: la selección inicial y la otra que dejamos
-      
-      // El concursante decide cambiar o mantener según la estrategia
-      const willSwitch = (cfg.strategy === 'cambiar') || 
-                        (cfg.strategy === 'aleatoria' && Math.random() < 0.5);
-      
-      const finalPick = willSwitch ? remainingClosedDoor : pick;
-      
-      // Resaltar puerta final
-      drawScene(doors, finalPick, '#ff9f1c'); 
-      await wait(cfg.delay/cfg.speed);
-
-      // Abrir puerta final
-      doors[finalPick].open = true; 
-      drawScene(doors, finalPick, '#ff9f1c'); 
-      await wait(cfg.delay/cfg.speed);
-      
-      // Abrir todas las puertas restantes
-      doors.forEach((d, i) => {
-        if (!d.open) d.open = true;
-      }); 
-      drawScene(doors, finalPick);
-
-      // ACTUALIZACIÓN DE ESTADÍSTICAS:
-      // Siempre contamos si habría ganado manteniendo o cambiando,
-      // independientemente de la estrategia elegida
-      if (prize === pick) st.stayWin++; // Si el premio estaba en la elección inicial
-      else st.switchWin++; // Si el premio estaba en otra puerta
-      
-      st.trial++; 
-      updateStats();
+      await autoRound();
     }
+    
+    if (st.trial >= cfg.total) {
+      updateStatusMessage('completed');
+    }
+    
+    st.running = false;
+    btnStart.disabled = false;
+    btnPause.disabled = true;
+    btnResume.disabled = true;
+    btnReset.disabled = false;
+    btnStart.classList.add('pulse');
+  }
 
-    async function loop(){
-      while(st.running && st.trial<cfg.total){
-        if(st.paused){await wait(100);continue;}
-        await autoRound();
+  /* ---------- Lógica modo Manual ---------- */
+  function prepareManual() {
+    st.manualStage = 'waitingInitial';
+    st.initialPick = null;
+    st.hostOpen = null;
+    st.remainingClosed = null;
+    st.finalPick = null;
+    
+    // Asegurar que solo hay una puerta con premio
+    const prizePosition = Math.floor(Math.random() * cfg.doors);
+    st.doors = [...Array(cfg.doors).keys()].map(i => ({
+      open: false,
+      hasPrize: i === prizePosition
+    }));
+    
+    drawScene(st.doors, -1);
+    updateStatusMessage('chooseDoor');
+  }
+
+  function manualClick(idx) {
+    // Prevenir clics si no estamos en un estado válido
+    if (st.manualStage === 'idle' || !st.running) return;
+    
+    if (st.manualStage === 'waitingInitial') {
+      st.initialPick = idx;
+      drawScene(st.doors, idx, '#ffeb3b');
+      updateStatusMessage('doorSelected', { DOOR: idx + 1 });
+      
+      // El presentador abre todas las puertas vacías excepto una
+      const emptyDoors = [...Array(cfg.doors).keys()]
+        .filter(i => i !== st.initialPick && !st.doors[i].hasPrize);
+      
+      const prizeIdx = st.doors.findIndex(d => d.hasPrize);
+      
+      // Determinar qué puerta dejamos cerrada aparte de la inicial
+      if (st.initialPick === prizeIdx) {
+        // Si la selección inicial tiene el premio, dejamos una puerta vacía cerrada
+        if (emptyDoors.length > 0) {
+          const randomIdx = Math.floor(Math.random() * emptyDoors.length);
+          st.remainingClosed = emptyDoors[randomIdx];
+          // Eliminar esta puerta de las que se abrirán
+          emptyDoors.splice(randomIdx, 1);
+        }
+      } else {
+        // Si la selección inicial no tiene el premio, dejamos cerrada la que tiene el premio
+        st.remainingClosed = prizeIdx;
       }
-      st.running=false;btnStart.disabled=false;btnPause.disabled=true;btnResume.disabled=true;btnReset.disabled=false;
-    }
-
-    /* ---------- Lógica modo Manual ---------- */
-    function prepareManual(){
-      st.manualStage = 'waitingInitial';
-      st.initialPick = null;
-      st.hostOpen = null;
-      st.remainingClosed = null;
       
-      // Asegurar que solo hay una puerta con premio
-      const prizePosition = Math.floor(Math.random() * cfg.doors);
-      st.doors = [...Array(cfg.doors).keys()].map(i => ({
-        open: false,
-        hasPrize: i === prizePosition
-      }));
+      // Mensaje de apertura
+      updateStatusMessage('hostOpening');
       
-      drawScene(st.doors, -1);
-    }
-
-    function manualClick(idx){
-      // Prevenir clics si no estamos en un estado válido
-      if (st.manualStage === 'idle' || !st.running) return;
-      
-      if(st.manualStage === 'waitingInitial'){
-        st.initialPick = idx;
-        drawScene(st.doors, idx, '#ffcf1c');
-        
-        // El presentador abre todas las puertas vacías excepto una
-        const emptyDoors = [...Array(cfg.doors).keys()]
-          .filter(i => i !== st.initialPick && !st.doors[i].hasPrize);
-        
-        const prizeIdx = st.doors.findIndex(d => d.hasPrize);
-        
-        // Determinar qué puerta dejamos cerrada aparte de la inicial
-        if (st.initialPick === prizeIdx) {
-          // Si la selección inicial tiene el premio, dejamos una puerta vacía cerrada
-          if (emptyDoors.length > 0) {
-            const randomIdx = Math.floor(Math.random() * emptyDoors.length);
-            st.remainingClosed = emptyDoors[randomIdx];
-            // Eliminar esta puerta de las que se abrirán
-            emptyDoors.splice(randomIdx, 1);
-          }
+      // Abrir todas las demás puertas vacías
+      let doorOpenCount = 0;
+      const openNextDoor = () => {
+        if (doorOpenCount < emptyDoors.length) {
+          st.doors[emptyDoors[doorOpenCount]].open = true;
+          drawScene(st.doors, idx, '#ffeb3b');
+          doorOpenCount++;
+          setTimeout(openNextDoor, Math.min(cfg.delay / cfg.speed, 300));
         } else {
-          // Si la selección inicial no tiene el premio, dejamos cerrada la que tiene el premio
-          st.remainingClosed = prizeIdx;
+          // Una vez abiertas todas las puertas necesarias, cambiamos al siguiente estado
+          st.manualStage = 'waitingFinal';
+          updateStatusMessage('finalChoice');
         }
-        
-        // Abrir todas las demás puertas vacías
-        let doorOpenCount = 0;
-        const openNextDoor = () => {
-          if (doorOpenCount < emptyDoors.length) {
-            st.doors[emptyDoors[doorOpenCount]].open = true;
-            drawScene(st.doors, idx, '#ffcf1c');
-            doorOpenCount++;
-            setTimeout(openNextDoor, Math.min(cfg.delay/cfg.speed, 300));
-          } else {
-            // Una vez abiertas todas las puertas necesarias, cambiamos al siguiente estado
-            st.manualStage = 'waitingFinal';
-          }
-        };
-        
-        // Iniciar animación de apertura secuencial
-        setTimeout(openNextDoor, 200);
-      } 
-      else if(st.manualStage === 'waitingFinal') {
-        // Solo permitir seleccionar la puerta inicial o la otra puerta que quedó cerrada
-        if (idx !== st.initialPick && idx !== st.remainingClosed) {
-          return; // Ignora clics en puertas inválidas o ya abiertas
-        }
-        
-        const finalPick = idx;
-        const prizeIdx = st.doors.findIndex(d => d.hasPrize);
-        
-        // Cambiar a estado idle para evitar más clics durante la animación
-        st.manualStage = 'idle';
-        
-        drawScene(st.doors, finalPick, '#ff9f1c');
-        
-        setTimeout(() => {
-          // Mostrar resultado de la puerta final seleccionada
-          st.doors[finalPick].open = true;
-          drawScene(st.doors, finalPick, '#ff9f1c');
-          
-          // Esperar un momento y luego mostrar todas las puertas
-          setTimeout(() => {
-            st.doors.forEach((d, i) => {
-              if (!d.open) d.open = true;
-            });
-            drawScene(st.doors, finalPick, '#ff9f1c');
-            
-            // Actualizar estadísticas según donde estaba el premio
-            if (prizeIdx === st.initialPick) st.stayWin++;
-            else st.switchWin++;
-            
-            st.trial++; 
-            updateStats();
-            
-            // Preparar siguiente ronda o finalizar
-            setTimeout(() => {
-              if (st.trial < cfg.total) {
-                prepareManual();
-              } else {
-                st.running = false;
-                btnStart.disabled = false;
-                btnReset.disabled = false;
-                canvas.style.pointerEvents = 'none';
-              }
-            }, 500);
-          }, 500);
-        }, 300);
+      };
+      
+      // Iniciar animación de apertura secuencial
+      setTimeout(openNextDoor, 200);
+    } 
+    else if (st.manualStage === 'waitingFinal') {
+      // Solo permitir seleccionar la puerta inicial o la otra puerta que quedó cerrada
+      if (idx !== st.initialPick && idx !== st.remainingClosed) {
+        return; // Ignora clics en puertas inválidas o ya abiertas
       }
+      
+      const finalPick = idx;
+      st.finalPick = finalPick;
+      const prizeIdx = st.doors.findIndex(d => d.hasPrize);
+      
+      // Cambiar a estado idle para evitar más clics durante la animación
+      st.manualStage = 'idle';
+      
+      // Mensaje de decisión
+      if (finalPick === st.initialPick) {
+        updateStatusMessage('staySelected');
+      } else {
+        updateStatusMessage('switchSelected');
+      }
+      
+      drawScene(st.doors, finalPick, '#ff9800');
+      
+      setTimeout(() => {
+        // Mostrar resultado de la puerta final
+        st.doors[finalPick].open = true;
+        drawScene(st.doors, finalPick, '#ff9800');
+        
+        // Determinar si ganó
+        const won = st.doors[finalPick].hasPrize;
+        st.lastWin = won;
+        
+        // Mensaje de resultado
+        updateStatusMessage(won ? 'win' : 'lose');
+        
+        // Celebrar si ganó
+        if (won) {
+          celebrateWin();
+        }
+        
+        // Esperar un momento y luego mostrar todas las puertas
+        setTimeout(() => {
+          st.doors.forEach((d, i) => {
+            if (!d.open) d.open = true;
+          });
+          drawScene(st.doors, finalPick, '#ff9800');
+          
+          // Actualizar estadísticas según donde estaba el premio
+          if (prizeIdx === st.initialPick) st.stayWin++;
+          else st.switchWin++;
+          
+          st.trial++; 
+          updateStats();
+          
+          // Preparar siguiente ronda o finalizar
+          setTimeout(() => {
+            if (st.trial < cfg.total) {
+              prepareManual();
+            } else {
+              st.running = false;
+              btnStart.disabled = false;
+              btnReset.disabled = false;
+              canvas.style.pointerEvents = 'none';
+              updateStatusMessage('completed');
+            }
+          }, 500);
+        }, 500);
+      }, 300);
     }
+  }
 
-    /* ---------- Reset ---------- */
-    function resetAll(){
-      st.trial = st.stayWin = st.switchWin = 0;
-      st.running = false;
-      st.paused = false;
-      st.manualStage = 'idle'; // Asegurar que el estado manual se reinicia
-      st.remainingClosed = null;
-      
-      // Crear puertas vacías (sin asignar premios todavía)
-      st.doors = [...Array(cfg.doors).keys()].map(() => ({
-        open: false, 
-        hasPrize: false
-      }));
-      
-      buildChart($('selChart').value);
-      updateStats();
-      adjustCanvasWidth();
-      
-      // Restablecer botones
-      btnStart.disabled = false;
+  /* ---------- Reset ---------- */
+  function resetAll() {
+    st.trial = st.stayWin = st.switchWin = 0;
+    st.running = false;
+    st.paused = false;
+    st.manualStage = 'idle'; // Asegurar que el estado manual se reinicia
+    st.remainingClosed = null;
+    
+    // Crear puertas vacías (sin asignar premios todavía)
+    st.doors = [...Array(cfg.doors).keys()].map(() => ({
+      open: false, 
+      hasPrize: false
+    }));
+    
+    buildChart($('selChart').value);
+    updateStats();
+    adjustCanvasWidth();
+    
+    // Restablecer botones
+    btnStart.disabled = false;
+    btnPause.disabled = true;
+    btnResume.disabled = true;
+    btnReset.disabled = false;
+    
+    // Desactivar interacción con canvas hasta que comience el modo manual
+    canvas.style.pointerEvents = 'none';
+    
+    // Restablecer mensaje de estado
+    updateStatusMessage('welcome');
+    
+    // Añadir animación al botón de inicio
+    btnStart.classList.add('pulse');
+    
+    // Ocultar spotlight
+    hideSpotlight();
+  }
+
+  /* ---------- Listeners ---------- */
+  $('speedRange').oninput = e => {
+    cfg.speed = parseFloat(e.target.value);
+    $('speedLabel').textContent = cfg.speed;
+  };
+  
+  $('selDoors').onchange = e => {
+    cfg.doors = parseInt(e.target.value);
+    resetAll();
+  };
+  
+  $('inpTrials').onchange = e => {
+    cfg.total = parseInt(e.target.value);
+    $('maxTrials').textContent = cfg.total;
+    resetAll();
+  };
+  
+  $('selStrategy').onchange = e => {
+    cfg.strategy = e.target.value;
+  };
+  
+  $('selChart').onchange = e => {
+    buildChart(e.target.value);
+    updateStats();
+  };
+
+  btnStart.onclick = () => {
+    resetAll();
+    btnStart.classList.remove('pulse');
+    
+    if (cfg.strategy === 'manual') {
+      st.running = true;
+      btnStart.disabled = true;
       btnPause.disabled = true;
       btnResume.disabled = true;
       btnReset.disabled = false;
-      
-      // Desactivar interacción con canvas hasta que comience el modo manual
+      canvas.style.pointerEvents = 'auto';
+      prepareManual();
+    } else {
+      st.running = true;
+      btnStart.disabled = true;
+      btnPause.disabled = false;
+      btnResume.disabled = true;
+      btnReset.disabled = false;
       canvas.style.pointerEvents = 'none';
+      loop();
     }
+  };
+  
+  btnPause.onclick = () => {
+    st.paused = true;
+    btnPause.disabled = true;
+    btnResume.disabled = false;
+  };
+  
+  btnResume.onclick = () => {
+    st.paused = false;
+    btnPause.disabled = false;
+    btnResume.disabled = true;
+  };
+  
+  btnReset.onclick = resetAll;
 
-    /* ---------- Listeners ---------- */
-    $('speedRange').oninput=e=>{cfg.speed=parseFloat(e.target.value);$('speedLabel').textContent=cfg.speed;};
-    $('selDoors').onchange=e=>{cfg.doors=parseInt(e.target.value);resetAll();};
-    $('inpTrials').onchange=e=>{cfg.total=parseInt(e.target.value);$('maxTrials').textContent=cfg.total;resetAll();};
-    $('selStrategy').onchange=e=>{cfg.strategy=e.target.value;};
-    $('selChart').onchange=e=>{buildChart(e.target.value);updateStats();};
-
-    btnStart.onclick = () => {
-      resetAll();
-      if (cfg.strategy === 'manual') {
-        st.running = true;
-        btnStart.disabled = true;
-        btnPause.disabled = true;
-        btnResume.disabled = true;
-        btnReset.disabled = false;
-        canvas.style.pointerEvents = 'auto';
-        prepareManual();
-      } else {
-        st.running = true;
-        btnStart.disabled = true;
-        btnPause.disabled = false;
-        btnResume.disabled = true;
-        btnReset.disabled = false;
-        canvas.style.pointerEvents = 'none';
-        loop();
+  // Mejorar el listener del canvas para manejar mejor los estados
+  canvas.addEventListener('click', e => {
+    if (cfg.strategy !== 'manual' || !st.running) return;
+    
+    const idx = clickToDoorIdx(e);
+    if (idx !== -1) {
+      // Agregar comprobación de estado antes de procesar el clic
+      if (st.manualStage === 'waitingInitial' || st.manualStage === 'waitingFinal') {
+        // Mover spotlight al punto de clic
+        const rect = canvas.getBoundingClientRect();
+        moveSpotlight(e.clientX - rect.left, e.clientY - rect.top);
+        
+        manualClick(idx);
       }
-    };
-    btnPause.onclick=()=>{st.paused=true;btnPause.disabled=true;btnResume.disabled=false;};
-    btnResume.onclick=()=>{st.paused=false;btnPause.disabled=false;btnResume.disabled=true;};
-    btnReset.onclick=resetAll;
-
-    // Mejorar el listener del canvas para manejar mejor los estados
-    canvas.addEventListener('click', e => {
-      if (cfg.strategy !== 'manual' || !st.running) return;
-      
-      const idx = clickToDoorIdx(e);
-      if (idx !== -1) {
-        // Agregar comprobación de estado antes de procesar el clic
-        if (st.manualStage === 'waitingInitial' || st.manualStage === 'waitingFinal') {
-          manualClick(idx);
-        }
-      }
-    });
-
-    /* ---------- inicio ---------- */
-    adjustCanvasWidth(); // Ajustar el canvas al cargar
-    resetAll();
+    }
   });
-  </script>
+  
+  // Mover spotlight con el movimiento del ratón en modo manual
+  canvas.addEventListener('mousemove', e => {
+    if (cfg.strategy === 'manual' && st.running && 
+        (st.manualStage === 'waitingInitial' || st.manualStage === 'waitingFinal')) {
+      const rect = canvas.getBoundingClientRect();
+      moveSpotlight(e.clientX - rect.left, e.clientY - rect.top);
+    }
+  });
+  
+  // Ocultar spotlight cuando el ratón sale del canvas
+  canvas.addEventListener('mouseout', () => {
+    hideSpotlight();
+  });
+
+  /* ---------- inicio ---------- */
+  adjustCanvasWidth(); // Ajustar el canvas al cargar
+  resetAll();
+});
+</script>
 </body>
 </html>
